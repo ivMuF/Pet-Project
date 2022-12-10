@@ -1,40 +1,38 @@
-from typing import Any
+from typing import List
 
 
 class Cell:
-    """ Класс, описывающий клутку """
+    """ Класс, описывающий клетку """
 
-    __states = {0: ' ', 1: 'O', 2: 'X'}  # Константы принято задавать капсом
+    STATES = {0: ' ', 1: 'O', 2: 'X'}
 
     def __init__(self, index: int) -> None:
         self.index = index
         self.__state = 0
 
-    def __str__(self) -> None:
-        print(self.index, Cell.__states[self.__state])  # Ну ваще так делать неправильно.
-        # Магический метод стр должен возвращать строку с информацией по классу, а не принтить.
-        # Для принта лучше сделать отдельный метод
-
     def state_info(self) -> str:
         if self.__state == 0:
             return f'{self.index}'
-        else: # Можно без else
-            return f'{Cell.__states[self.__state]}'
+        return f'{Cell.STATES[self.__state]}'
 
-    def get_state(self) -> int:
+    @property
+    def state(self) -> int:
         return self.__state
 
-    def set_state(self, num: int) -> None:
+    @state.setter
+    def state(self, num: int) -> None:
         self.__state = num
 
 
 class Board:
     """ Класс, описывающий игровое поле и логику игры """
 
+    WIN_COORD = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6))
+
     def __init__(self) -> None:
         self.board = [Cell(index=i) for i in range(1, 10)]
 
-    def __str__(self) -> list[Cell]: # Лучше юзать List из библиотеке typing
+    def __str__(self) -> List[Cell]:
         return self.board
 
     def draw_board(self) -> None:
@@ -47,44 +45,78 @@ class Board:
             print("-------------")
 
     def board_check(self, num_state: int, num_cell: int) -> None:
-        if self.board[num_cell - 1].get_state() == 0:
-            self.board[num_cell - 1].set_state(num_state)
+        if self.board[num_cell - 1].state == 0:
+            self.board[num_cell - 1].state = num_state
         else:
             print('Клетка уже занята')
             player = int(input('Выберите другую Клетку! '))
             self.board_check(num_state=num_state, num_cell=player)
 
-    def check_win(self) -> Any:
-        # TODO вот тут есть что исправить:
-        #  - Зачем каждый раз задавать победные координаты, если их можно вынести в константу?
-        #  - Метод check_win по логике должен возвращать bool, а не Any. Если кто-то победил - верни True, а там уже
-        #  соответствующий метод
-        win_coord = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6))
-        for each in win_coord:
+    def check_win(self, pl_1, pl_2) -> bool:
+        for each in Board.WIN_COORD:
             if self.board[each[0]].state_info() == self.board[each[1]].state_info() == self.board[each[2]].state_info():
-                return f'Победил: {self.board[each[0]].state_info()}'
+                self.player_win(pl_1, pl_2, self.board[each[0]])
+                return True
         return False
+
+    @classmethod
+    def player_win(cls, pl_1, pl_2, state) -> None:
+        if state == pl_1.get_team():
+            print(f'Победитель:\n{pl_1}')
+        else:
+            print(f'Победитель:\n{pl_2}')
+
+
+class Player:
+
+    def __init__(self, name: str, team: int, board: Board) -> None:
+        self.name = name
+        self.team = team
+        self.board = board
+
+    def __str__(self) -> str:
+        return f'Имя игрока: {self.name}, Команда: {Cell.STATES[self.team]}'
+
+    def get_team(self):
+        return self.team
+
+    def get_name(self):
+        return self.name
+
+    def move(self, num_cell: int) -> None:
+        self.board.board_check(num_state=self.team, num_cell=num_cell)
+
+
+class Game:
+    count = 0
+    player_1 = None
+    player_2 = None
+
+    def __init__(self, pl_1: Player, pl_2: Player, board: Board) -> None:
+        self.pl_1 = pl_1
+        self.pl_2 = pl_2
+        self.board = board
+
+    def play(self) -> None:
+        while True:
+            self.board.draw_board()
+            if self.board.check_win(self.pl_1, self.pl_2):
+                break
+            if Game.count == 9:
+                print('Победила: Дружба!')
+                break
+            elif Game.count % 2 == 0:
+                Game.player_1 = int(input(f'{self.pl_1.get_name()} твой ход! '))
+                self.pl_1.move(num_cell=Game.player_1)
+            else:
+                Game.player_2 = int(input(f'{self.pl_2.get_name()} твой ход! '))
+                self.pl_2.move(num_cell=Game.player_2)
+            Game.count += 1
 
 
 my_board = Board()
 count = 0
-while True:
-    # TODO тут тоже есть что исправить:
-    #  - Почему флоу игры не сделать классом? С определенными состояниями и аттрибутами?
-    #  - Также почему бы не сделать класс игрока, чтобы он был не обезличен, а имел имя,
-    #  символ который он ставит на доске. Задача со *: попробуй инициализировать класс игрока с помощью classmethod,
-    #  как это можно здесь использовать?
-    my_board.draw_board()
-    if my_board.check_win(): # TODO согласись выглядит странно (эта строчка и строчка ниже)
-        print(my_board.check_win())
-        break
-    if count == 9:
-        print('Победила: Дружба!')
-        break
-    elif count % 2 == 0:
-        player_1 = int(input('Куда ставим "O"? '))
-        my_board.board_check(num_state=1, num_cell=player_1)
-    else:
-        player_2 = int(input('Куда ставим "X"? '))
-        my_board.board_check(num_state=2, num_cell=player_2)
-    count += 1
+rick = Player(name='Rick', team=1, board=my_board)
+morty = Player(name='Morty', team=2, board=my_board)
+game = Game(pl_1=rick, pl_2=morty, board=my_board)
+game.play()
