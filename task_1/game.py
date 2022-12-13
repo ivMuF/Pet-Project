@@ -95,6 +95,9 @@ class Game:
         self.pl_2 = self.player_2()
         self.board = Board()
 
+    # TODO все эти класс методы не в тему, удали, ты реализовал неверное использование декоратора classmethod.
+    #  По класс методам можем созвониться я тебе подскажу как именно их юзать или могу вообще сделать отдельное задание
+
     @classmethod
     def player_1(cls) -> Player:
         name = input('Введите имя первого игрока: ')
@@ -132,4 +135,4 @@ class Game:
     #     cls.play(Game())
 
 
-Game.play(Game())
+Game.play(Game())  # TODO так тоже не пишут, так быть не должно
