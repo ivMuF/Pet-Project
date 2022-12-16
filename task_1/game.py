@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 
 class Cell:
@@ -83,56 +83,47 @@ class Player:
     def get_name(self):
         return self.name
 
-    # def move(self, num_cell: int) -> None:
-    #     self.board.board_check(num_state=self.team, num_cell=num_cell)
+    @classmethod
+    def create_first_player(cls):
+        return cls(name='Rick', team=1)
+
+    @classmethod
+    def create_second_player(cls):
+        return cls(name='Morty', team=2)
 
 
 class Game:
     count = 0
 
     def __init__(self) -> None:
-        self.pl_1 = self.player_1()
-        self.pl_2 = self.player_2()
+        self.pl_first: Optional[Player] = None
+        self.pl_second: Optional[Player] = None
+        self.board: Optional[Board] = None
+
+    def setup(self) -> None:
+        self.pl_first = Player.create_first_player()
+        self.pl_second = Player.create_second_player()
         self.board = Board()
-
-    # TODO все эти класс методы не в тему, удали, ты реализовал неверное использование декоратора classmethod.
-    #  По класс методам можем созвониться я тебе подскажу как именно их юзать или могу вообще сделать отдельное задание
-
-    @classmethod
-    def player_1(cls) -> Player:
-        name = input('Введите имя первого игрока: ')
-        return Player(name=name, team=1)
-
-    @classmethod
-    def player_2(cls) -> Player:
-        name = input('Введите имя второго игрока: ')
-        return Player(name=name, team=2)
-
-    @classmethod
-    def setup(cls) -> None:
-        cls.player_1()
-        cls.player_2()
 
     def play(self) -> None:
         while True:
             self.board.draw_board()
-            if self.board.check_win(self.pl_1, self.pl_2):
+            if self.board.check_win(pl_1=self.pl_first, pl_2=self.pl_second):
                 break
             if Game.count == 9:
                 print('Победила: Дружба!')
                 break
             elif Game.count % 2 == 0:
-                player = int(input(f'{self.pl_1.get_name()} твой ход! '))
+                player = int(input(f'{self.pl_first.get_name()} твой ход! '))
                 self.board.board_check(num_state=1, num_cell=player)
             else:
-                player = int(input(f'{self.pl_2.get_name()} твой ход! '))
+                player = int(input(f'{self.pl_second.get_name()} твой ход! '))
                 self.board.board_check(num_state=2, num_cell=player)
             Game.count += 1
 
-    # @classmethod
-    # def run(cls):
-    #     cls.setup()
-    #     cls.play(Game())
+    def run(self):
+        self.setup()
+        self.play()
 
 
-Game.play(Game())  # TODO так тоже не пишут, так быть не должно
+Game.run(Game())
