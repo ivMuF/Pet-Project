@@ -10,18 +10,35 @@
 # 5. Логгировать передвижения игроков. (тут можешь заморочиться и сделать разными цветами, но не обязательно)
 # 6. Частота событий на игровом поле тоже должна выноситься в отдельную переменную.
 import random
-from typing import Optional, List
+from typing import Optional, List, Any
+from abc import ABC, abstractmethod
+
+
+class Event(ABC):
+
+    @abstractmethod
+    def return_num(self, num):
+        pass
+
+
+class PositiveEvent(Event):
+
+    def return_num(self, num: int) -> int:
+        return num
+
+
+class NegativeEvent(Event):
+
+    def return_num(self, num: int) -> int:
+        return -1 * num
 
 
 class Cell:
     """ Класс, описывающий клетку """
 
-    EVENTS = [-3, -2, -1, 1, 2, 3]  #TODO Зачем делать хардкод значения,
-                                    # если ты можешь рандомом просто получаться значения в этом диапазоне?
-
     def __init__(self, index: int) -> None:
         self.__index: int = index
-        self.__event = self.set_event()
+        self.__event: Any = self.set_event()
 
     def __str__(self) -> str:
         return f'{self.__index}'
@@ -29,35 +46,31 @@ class Cell:
     def get(self) -> int:
         return self.__index
 
-    def get_event(self):
+    def get_event(self) -> Any:
         return self.__event
 
     @staticmethod
-    def set_event():
+    def set_event() -> Any:
         if random.randint(1, 100) < 65:
-            return random.choice(Cell.EVENTS)
-        else:
-            return 0
+            num = random.randint(1, 5)
+            events = [PositiveEvent(), NegativeEvent()]
+            return random.choice(events).return_num(num)
 
 
 class Field:
     """ Класс, описывающий игровое поле """
 
     def __init__(self, min_cell_count, max_cell_count) -> None:
-        self.__field: List[Cell] = [Cell(index=j) for j in range(1, random.randint(min_cell_count, max_cell_count))] #TODO Нэйминг: класс филд с переменной филд. Наверно это всё-таки cells
+        self.__cells: List[Cell] = [Cell(index=j) for j in range(1, random.randint(min_cell_count, max_cell_count))]
 
     def __str__(self) -> str:
-        return f'Длина игрового поля: {len(self.__field)}'
+        return f'Длина игрового поля: {len(self.__cells)}'
 
-    def get(self) -> List[Cell]: #TODO Нэйминг: гет что?)
-        return self.__field
+    def __len__(self):
+        return len(self.__cells)
 
-    def field_check(self, num) -> bool: #TODO у тебя получается Optional[bool], так делать не надо, пусть возвращает фолс если условие не
-                                        # выполнено. Также логически, это условие должно проверяться в классе игры, а не поля.
-                                        # Потому что поле ничего не знает про положение игрока, а игрок ничего не знает о поле.
-                                        # Для этого класса реализуй метод __len__, а для игры проверку это условия.
-        if num >= len(self.__field):
-            return True
+    def get_cells(self) -> List[Cell]:
+        return self.__cells
 
 
 class Player:
@@ -84,41 +97,50 @@ class Player:
 
 class Game:
     """ Класс, описывающий логику игры """
-    # TODO вот так делать наотрез нельзя, ты создаешь переменные КЛАССА! Эти переменные общие для ВСЕХ ИНСТАНСОВ КЛАССА
-    # добавляя что-то в финиш_лист, ты добавляешь это ДЛЯ ВСЕХ ИНСТАНСОВ. Вроде эту тему объяснял, если нет, то го ещё раз объясню
-    win = False
-    finish_list = []
 
     def __init__(self) -> None:
         self.players: Optional[List[Player]] = None
         self.game_field: Optional[Field] = None
+        self.win = False
+        self.finish_list = []
 
     def setup(self, num_player: int, min_cell: int, max_cell: int) -> None:
-        self.players: List[Player] = [Player(name=input('Введите имя игрока: ')) for _ in range(num_player)]  # вот тут молодец
+        self.players: List[Player] = [Player(name=input('Введите имя игрока: ')) for _ in range(num_player)]
         self.game_field: Field = Field(min_cell_count=min_cell, max_cell_count=max_cell)
 
-    def move(self, gamer) -> None:
-        if self.game_field.field_check(gamer.get_cell()):
+    def field_check(self, num: int) -> bool:
+        if num >= len(self.game_field):
+            return True
+        else:
+            return False
+
+    def move(self, gamer: Player) -> None:
+        if self.field_check(gamer.get_cell()):
             print(gamer, 'дошёл до конца!')
-            Game.finish_list.append(gamer)  #TODO почему ты обращаешься к классу, если у тебя есть инстанс этого класса? Нужно исправить, это ошибка
-            Game.win = True  #TODO почему ты обращаешься к классу, если у тебя есть инстанс этого класса? Нужно исправить, это ошибка
+            self.finish_list.append(gamer)
+            self.win = True
         else:
             print(gamer, 'передвигается на клетку', gamer.get_cell())
 
-    def events(self, cell_num, gamer):
-        event_list = self.game_field.get()
+    def events(self, cell_num: int, gamer: Player) -> None:
+        event_list = self.game_field.get_cells()
         if cell_num < len(event_list):
             event = event_list[cell_num - 1].get_event()
-            if event > 0:
-                gamer.set_cell(cell_num + event)
-                print('Случилось что-то хорошее')
-            elif event < 0:
-                gamer.set_cell(cell_num + event)
-                print('Случилось что-то плохое')
-            if event != 0:
-                self.move(gamer=gamer)
+            if event:
+                if event > 0:
+                    gamer.set_cell(cell_num + event)
+                    print('Случилось что-то хорошее, '
+                          f'передвигайтесь на {event} клеток вперед')
+                elif event < 0:
+                    gamer.set_cell(cell_num + event)
+                    print('Случилось что-то плохое '
+                          f'передвигайтесь на {abs(event)} клеток назад')
+
+                print(gamer, 'передвигается на клетку', gamer.get_cell())
 
     def play(self) -> None:
+        print('\nНачинается игра')
+        print(self.game_field)
 
         while True:
             for player in self.players:
@@ -127,9 +149,9 @@ class Game:
                 self.move(gamer=player)
                 self.events(cell_num=player.get_cell(), gamer=player)
 
-            if Game.win:
+            if self.win:
                 print('\nПобедители:')
-                for player in Game.finish_list:
+                for player in self.finish_list:
                     print(player)
                 break
 
