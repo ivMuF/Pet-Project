@@ -59,17 +59,20 @@ class Player(Race):
         self.profession: str = ''
 
     def __str__(self) -> str:
-        return '\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}'.format(
-            'Имя', self.name,
-            'Сила', self.power,
-            'Ловкость', self.agility,
-            'Телосложение', self.constitution,
-            'Интеллект', self.intellect,
-            'Мудрость', self.wisdom,
-            'Харизма', self.charisma,
-            'Раса', self.race,
-            'Класс', self.profession
-        )
+        #TODO Юзай f-string
+        return f"name: {self.name},{self.power=},{self.agility=},{self.constitution=},{self.intellect=}"
+        # return '\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}'.format(
+        #     'Имя', self.name,
+        #     'Сила', self.power,
+        #     'Ловкость', self.agility,
+        #     'Телосложение', self.constitution,
+        #     'Интеллект', self.intellect,
+        #     'Мудрость', self.wisdom,
+        #     'Харизма', self.charisma,
+        #     'Раса', self.race,
+        #     'Класс', self.profession
+        # )
+
 
     def change_race(self, race: str) -> None:
         if race == 'elf':
