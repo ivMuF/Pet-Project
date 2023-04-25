@@ -11,99 +11,47 @@
 # 6. Проверять работоспособность буду сам, не парься над тем, как показать,
 #    что условная доп. способность, полученная от класса персонажа, работает и реализована правильно
 
-
-class Race:
-    """ Класс. Описывает бонусы от расы """
-    @staticmethod
-    def elf() -> int:
-        """ Раса эльф добавляет +2 к ловкости """
-        return 2
-
-    @staticmethod
-    def human() -> int:
-        """ Раса человек добавляет +2 к силе """
-        return 2
+from race import Race, Human, Dwarf, Elf
+from profession import Profession, Warrior, Archer, Mage
 
 
-class Profession:
-    """ Класс. Описывает бонусы от профессий """
-
-    @staticmethod
-    def mag() -> int:
-        """ Профессия маг добавляет +3 к интеллекту """
-        return 3
-
-    @staticmethod
-    def archer() -> int:
-        """ Профессия маг добавляет +3 к ловкости """
-        return 3
-
-    @staticmethod
-    def warrior() -> int:
-        """ Профессия маг добавляет +3 к телосложению """
-        return 3
-
-
-class Player(Race):
+class Player:
     """ Класс. Описывающий игрока """
 
-    def __init__(self, name: str) -> None:
-        self.name: str = name
-        self.power: int = 10
-        self.agility: int = 10
-        self.constitution: int = 10
-        self.intellect: int = 10
-        self.wisdom: int = 10
-        self.charisma: int = 10
-        self.race: str = ''
-        self.profession: str = ''
+    def __init__(self, name: str, race: Race, profession: Profession) -> None:
+        self.name = name
+        self.power = 10
+        self.agility = 10
+        self.constitution = 10
+        self.intellect = 10
+        self.wisdom = 10
+        self.charisma = 10
+        self.race = race
+        self.profession = profession
 
     def __str__(self) -> str:
-        #TODO Юзай f-string
-        return f"name: {self.name},{self.power=},{self.agility=},{self.constitution=},{self.intellect=}"
-        # return '\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}\n{}: {}'.format(
-        #     'Имя', self.name,
-        #     'Сила', self.power,
-        #     'Ловкость', self.agility,
-        #     'Телосложение', self.constitution,
-        #     'Интеллект', self.intellect,
-        #     'Мудрость', self.wisdom,
-        #     'Харизма', self.charisma,
-        #     'Раса', self.race,
-        #     'Класс', self.profession
-        # )
+        return f"name: {self.name},{self.power=},{self.agility=},{self.constitution=},{self.intellect=},{self.wisdom=}"
+
+    @property
+    def pwr(self) -> int:
+        return self.power + self.race.pwr_race_modifier + self.profession.pwr_profession_modifier
+
+    @property
+    def agi(self) -> int:
+        return self.agility + self.race.agi_race_modifier + self.profession.agi_profession_modifier
+
+    @property
+    def con(self) -> int:
+        return self.constitution + self.race.con_race_modifier + self.profession.con_profession_modifier
+
+    @property
+    def int(self) -> int:
+        return self.intellect + self.race.int_race_modifier + self.profession.int_profession_modifier
+
+    @property
+    def wis(self) -> int:
+        return self.wisdom + self.race.wis_race_modifier + self.profession.wis_profession_modifier
 
 
-    def change_race(self, race: str) -> None:
-        if race == 'elf':
-            self.race = 'Эльф'
-            self.agility += Race.elf()
-        elif race == 'human':
-            self.race = 'Человек'
-            self.power += Race.human()
-
-    def change_profession(self, profession: str) -> None:
-        if profession == 'mag':
-            self.profession = 'Маг'
-            self.intellect += Profession.mag()
-        elif profession == 'archer':
-            self.profession = 'Лучник'
-            self.agility += Profession.archer()
-        elif profession == 'warrior':
-            self.profession = 'Воин'
-            self.constitution += Profession.warrior()
-
-
-def create_player() -> Player:
-    name = input('Введите Имя персонажа: ')
-    race = input('Введите Расу персонажа(elf, human): ')
-    profession = input('Введите Класс персонажа(mag, archer, warrior): ')
-    user = Player(name=name)
-    user.change_race(race=race)
-    user.change_profession(profession=profession)
-
-    return user
-
-
-if __name__ == '__main__':
-    print(create_player())
+player = Player('Rick', Human(), Warrior())
+print(player.pwr, player.agi, player.con, player.int, player.wis)

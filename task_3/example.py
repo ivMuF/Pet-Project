@@ -15,6 +15,7 @@ class Race(ABC):
     def super_attack(self):
         raise NotImplementedError("Чел пропиши чудо-скилл")
 
+
 class Human(Race):
 
     @property
